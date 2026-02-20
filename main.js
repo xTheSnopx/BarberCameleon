@@ -26,6 +26,175 @@ window.addEventListener('scroll', () => {
     }
 });
 
+// ============ VIDEO HOVER PLAY ============
+document.querySelectorAll('.video-item').forEach(item => {
+    const video = item.querySelector('video');
+    if (video) {
+        item.addEventListener('mouseenter', () => {
+            video.play();
+        });
+        item.addEventListener('mouseleave', () => {
+            video.pause();
+            video.currentTime = 0;
+        });
+        // Click para pantalla completa
+        item.addEventListener('click', () => {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            }
+            video.muted = false;
+            video.play();
+        });
+    }
+});
+
+// ============ LIGHTBOX PARA FOTOS ============
+// Crear el lightbox
+const lightbox = document.createElement('div');
+lightbox.id = 'lightbox';
+lightbox.innerHTML = `
+    <div class="lightbox-content">
+        <span class="lightbox-close">&times;</span>
+        <img src="" alt="Imagen ampliada">
+        <div class="lightbox-nav">
+            <button class="lightbox-prev"><i class="fas fa-chevron-left"></i></button>
+            <button class="lightbox-next"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+`;
+document.body.appendChild(lightbox);
+
+// Agregar estilos del lightbox
+const lightboxStyles = document.createElement('style');
+lightboxStyles.textContent = `
+    #lightbox {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+    #lightbox.active {
+        display: flex;
+    }
+    .lightbox-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+    }
+    .lightbox-content img {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 15px;
+        box-shadow: 0 0 60px rgba(255, 0, 255, 0.4), 0 0 100px rgba(0, 255, 255, 0.2);
+        animation: zoomIn 0.3s ease;
+    }
+    @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .lightbox-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        font-size: 2.5rem;
+        color: #fff;
+        cursor: pointer;
+        transition: color 0.3s, transform 0.3s;
+    }
+    .lightbox-close:hover {
+        color: #ff00ff;
+        transform: rotate(90deg);
+    }
+    .lightbox-nav {
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        pointer-events: none;
+    }
+    .lightbox-nav button {
+        pointer-events: auto;
+        background: rgba(0, 255, 255, 0.2);
+        border: 2px solid #00ffff;
+        color: #00ffff;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .lightbox-nav button:hover {
+        background: #00ffff;
+        color: #000;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+    }
+`;
+document.head.appendChild(lightboxStyles);
+
+// Funcionalidad del lightbox
+const lightboxImg = lightbox.querySelector('img');
+const lightboxClose = lightbox.querySelector('.lightbox-close');
+const lightboxPrev = lightbox.querySelector('.lightbox-prev');
+const lightboxNext = lightbox.querySelector('.lightbox-next');
+let currentImageIndex = 0;
+let galleryImages = [];
+
+// Obtener todas las fotos
+document.querySelectorAll('.foto-item').forEach((item, index) => {
+    const img = item.querySelector('img');
+    if (img) {
+        galleryImages.push(img.src);
+        item.addEventListener('click', () => {
+            currentImageIndex = index;
+            lightboxImg.src = img.src;
+            lightbox.classList.add('active');
+        });
+    }
+});
+
+// Cerrar lightbox
+lightboxClose.addEventListener('click', () => {
+    lightbox.classList.remove('active');
+});
+
+lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) {
+        lightbox.classList.remove('active');
+    }
+});
+
+// Navegación
+lightboxPrev.addEventListener('click', () => {
+    currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+    lightboxImg.src = galleryImages[currentImageIndex];
+});
+
+lightboxNext.addEventListener('click', () => {
+    currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+    lightboxImg.src = galleryImages[currentImageIndex];
+});
+
+// Teclas de navegación
+document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape') lightbox.classList.remove('active');
+    if (e.key === 'ArrowLeft') lightboxPrev.click();
+    if (e.key === 'ArrowRight') lightboxNext.click();
+});
+
 // ============ ANIMACIÓN AL SCROLL ============
 const observerOptions = {
     threshold: 0.1,
